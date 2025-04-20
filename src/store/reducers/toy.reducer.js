@@ -2,34 +2,44 @@ export const SET_TOYS = 'SET_TOYS'
 export const ADD_TOY = 'ADD_TOY'
 export const UPDATE_TOY = 'UPDATE_TOY'
 export const REMOVE_TOY = 'REMOVE_TOY'
+export const UNDO_TOY = 'UNDO_TOY'
 
 const initialState = {
-    toys: []
+    toys: [],
+    lastToys: null,
 }
 
-export function toyReducer(state = initialState, cmd) {
-    switch (cmd.type) {
+export function toyReducer(state = initialState, action = {}) {
+    switch (action.type) {
         case SET_TOYS:
-            return { ...state, toys: cmd.toys }
+            return { 
+                ...state, 
+                lastToys: state.toys,
+                toys: action.toys 
+            }
 
         case REMOVE_TOY:
             return {
                 ...state,
-                toys: state.toys.filter(toy => toy._id !== cmd.toyId)
+                lastToys: state.toys,
+                toys: state.toys.filter(toy => toy._id !== action.toyId)
             }
 
         case ADD_TOY:
             return {
                 ...state,
-                toys: [...state.toys, cmd.toy]
+                lastToys: state.toys,
+                toys: [...state.toys, action.toy]
             }
 
         case UPDATE_TOY:
             return {
                 ...state,
+                lastToys: state.toys,
                 toys: state.toys.map(toy =>
-                    toy._id === cmd.toy._id ? cmd.toy : toy
+                    toy._id === action.toy._id ? action.toy : toy
                 )
+            }
             }
 
         default:
