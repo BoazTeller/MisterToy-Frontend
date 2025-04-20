@@ -1,0 +1,58 @@
+/* Universal box-sizing reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+#root {
+  height: 100%; 
+}
+
+/* Reset margin and padding for body */
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Reset margin and padding for headings and paragraphs */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+    margin: 0;
+    padding: 0;
+}
+
+/* Image fit and scaling */
+img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+/* Reset link styles */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Button pointer cursor */
+button {
+    border: none;
+    cursor: pointer;
+}
+
+/* Inherit font for input and select elements */
+input {
+    border: none;
+}
+
+input,
+select {  
+    font-family: inherit;
+}
