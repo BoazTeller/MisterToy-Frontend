@@ -1,3 +1,4 @@
+import { store } from '../store.js'
 import { toyService } from '../../services/toy.service.local.js'
 
 import {
@@ -5,10 +6,14 @@ import {
     ADD_TOY,
     UPDATE_TOY,
     REMOVE_TOY,
-    UNDO_TOY
+    UNDO_TOY,
+    SET_FILTER_BY,
+    SET_SORT_BY,
 } from '../reducers/toy.reducer.js'
 
 export function loadToys(pageIdx) {
+    const { filterBy, sortBy } = store.getState().toyModule
+
     return toyService.query({ filterBy, sortBy, pagination: { pageIdx } })
         .then(toys => {
             store.dispatch({ type: SET_TOYS, toys })
@@ -42,4 +47,24 @@ export function removeToy(toyId) {
             console.error('ToyActions → Cannot remove toy', err)
             throw err
         })
+}
+
+export function removeToyOptimistic(toyId) {
+    store.dispatch({ type: REMOVE_TOY, toyId })
+
+    return toyService.remove(toyId)
+        .catch(err => {
+            store.dispatch({ type: UNDO_TOY })
+            console.error('ToyActions → Optimistic remove failed', err)
+            throw err
+        }   
+    )
+}
+
+export function setFilter(filterBy = toyService.getDefaultFilter()) {
+    store.dispatch({ type: SET_FILTER_BY, filterBy })
+}
+
+export function setSort(sortBy = toyService.getDefaultSort()) {
+    store.dispatch({ type: SET_SORT_BY, sortBy })
 }
