@@ -9,3 +9,9 @@ main.app-content {
     flex-grow: 1; 
     overflow-y: auto; 
 }
+
+.container {
+    padding: 1em;
+    margin: auto;
+}
+  
