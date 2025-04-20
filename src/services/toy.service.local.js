@@ -2,6 +2,7 @@ import { utilService } from "./util.service.js"
 import { storageService } from "./async-storage.service.js"
 
 const TOY_KEY = 'toyDB'
+const PAGE_SIZE = 6
 const gLabels = [
     'On wheels',
     'Box game',
@@ -21,14 +22,27 @@ export const toyService = {
     save,
     remove,
     getEmptyToy,
+    createRandomToy,
+    getDefaultFilter,
+    getDefaultSort
 }
 
-function query() {
-    return storageService.query(TOY_KEY)
-}
+function query(queryOptions = {}) {
+    const {
+        filterBy = {},
+        sortBy = {},
+        pagination = {}
+    } = queryOptions || {}
 
-function getById(toyId) {
-    return storageService.get(TOY_KEY, toyId)
+    return storageService.query(TOY_KEY).then(toys => {
+        let toysToReturn = [...toys]
+
+        toysToReturn = _filterToys(toysToReturn, filterBy)
+        toysToReturn = _sortToys(toysToReturn, sortBy)
+        toysToReturn = _paginateToys(toysToReturn, pagination)
+
+        return toysToReturn
+    })
 }
 
 function remove(toyId) {
@@ -47,12 +61,40 @@ function save(toy) {
     }
 }
 
+function getById(toyId) {
+    return storageService.get(TOY_KEY, toyId)
+}
+
 function getEmptyToy() {
     return {
         name: '',
         price: 0,
         labels: [],
         inStock: null,
+    }
+}
+
+function createRandomToy() {
+    const randomNames = ['Zippy', 'WackyBot', 'DinoSmash', 'ColorCube', 'BuzzBlaster']
+    const name = randomNames[utilService.getRandomIntInclusive(0, randomNames.length - 1)]
+    const toy = _createToy(name)
+
+    return save(toy)
+}
+
+
+function getDefaultFilter() {
+    return {
+        txt: '',
+        inStock: null,
+        labels: [],
+    }
+}
+
+function getDefaultSort() {
+    return {
+        sortField: '',
+        sortDir: 1
     }
 }
 
@@ -97,4 +139,52 @@ function _getRandomLabels() {
     }
 
     return randomLabels
+}
+
+function _filterToys(toys, filterBy) {
+    let filteredToys = [...toys]
+
+    if (filterBy.txt) {
+        const regex = new RegExp(filterBy.txt, 'i')
+        filteredToys = filteredToys.filter(toy => regex.test(toy.name))
+    }
+
+    if (typeof filterBy.inStock === 'boolean') {
+        filteredToys = filteredToys.filter(toy => toy.inStock === filterBy.inStock)
+    }
+
+    if (Array.isArray(filterBy.labels) && filterBy.labels.length) {
+        filteredToys = filteredToys.filter(toy =>
+            filterBy.labels.every(label => toy?.labels?.includes(label))
+        )
+    }
+
+    return filteredToys
+}
+
+function _sortToys(toys, sortBy) {
+    const sortedToys = [...toys]
+    const { sortField, sortDir } = sortBy
+
+    if (sortDir !== 1 && sortDir !== -1) return sortedToys
+
+    if (sortField === 'name') {
+        sortedToys.sort((toy1, toy2) =>
+            toy1.name.localeCompare(toy2.name) * sortDir
+        )
+    } else if (['price', 'createdAt'].includes(sortField)) {
+        sortedToys.sort((toy1, toy2) =>
+            (toy1[sortField] - toy2[sortField]) * sortDir
+        )
+    }
+
+    return sortedToys
+}
+
+function _paginateToys(toys, pagination) {
+    const pageIdx = pagination.pageIdx || 0
+    const pageSize = pagination.pageSize || PAGE_SIZE
+    const startIdx = pageIdx * pageSize
+
+    return toys.slice(startIdx, startIdx + pageSize)
 }
